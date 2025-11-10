@@ -1,23 +1,20 @@
-const express = require("express");
-const router = express.Router();
-const {
+import { Router } from "express";
+import {
   createInvestimento,
   getInvestimentos,
   getInvestimentoById,
   updateStatusInvestimento,
   deleteInvestimentoById,
-} = require("../controller/investimentoController");
+} from "../controller/investimentoController.js";
 
-const verifyToken = require("../middleware/verifyMiddleware");
+// import { verifyToken } from "../middleware/verifyMiddleware";
+
+const router = Router();
 
 router.post("/", createInvestimento);
-
 router.get("/", getInvestimentos);
-
 router.get("/:id", getInvestimentoById);
-
 router.put("/:id/status", updateStatusInvestimento);
-
 router.delete("/:id", deleteInvestimentoById);
 
-module.exports = router;
+export default router;
