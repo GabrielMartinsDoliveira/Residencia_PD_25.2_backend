@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { InvestimentoService } from "../services/investimentoService";
+import { InvestimentoService } from "../services/investimentoService.js";
 
 const service = new InvestimentoService();
 
@@ -39,7 +39,7 @@ export const updateStatusInvestimento = async (req: Request, res: Response) => {
       req.params.id,
       req.body.status
     );
-    res.status(200).json(investimento);
+    res.status(200).json(investimento.status);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

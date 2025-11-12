@@ -14,19 +14,25 @@ export class Usuario {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column()
+  @Column("varchar")
   nome!: string;
 
-  @Column({ unique: true })
+  @Column("varchar",{ unique: true })
   email!: string;
 
-  @Column({ unique: true })
+  @Column("varchar", { unique: true })
   matricula!: string;
 
-  @Column()
+  @Column("varchar", {nullable: true})
+  contaBancaria?: string | null;
+
+  @Column("varchar", {nullable: true})
+  agenciaBancaria?: string | null;
+
+  @Column("varchar")
   senha!: string;
 
-  @Column({ type: "enum", enum: ["admin", "tomador", "investidor"], default: "tomador" })
+  @Column({ type: "enum", enum: ["admin", "tomador", "investidor"] })
   role!: UserRole;
 
   @Column({ type: "decimal", default: 0 })

@@ -1,5 +1,5 @@
-import { AppDataSource } from "../data-source";
-import { Pagamento } from "../models/Pagamento";
+import { AppDataSource } from "../data-source.js";
+import { Pagamento } from "../models/Pagamento.js";
 
 const pagamentoRepository = AppDataSource.getRepository(Pagamento);
 
@@ -11,13 +11,13 @@ export const PagamentoService = {
   },
 
   async listarPagamentos(): Promise<Pagamento[]> {
-    return await pagamentoRepository.find();
+    return await pagamentoRepository.find({relations: ["emprestimo"]});
   },
 
   async buscarPorId(id: string): Promise<Pagamento | null> {
     return await pagamentoRepository.findOne({
       where: { id },
-      relations: ["idEmprestimo"],
+      relations: ["emprestimo"],
     });
   },
 

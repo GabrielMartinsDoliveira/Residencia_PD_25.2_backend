@@ -12,20 +12,31 @@ export class EmprestimoService {
     this.usuarioRepo = AppDataSource.getRepository(Usuario);
   }
 
-  async createEmprestimo(data: Partial<Emprestimo>): Promise<Emprestimo> {
-    const { idTomador } = data;
+  async createEmprestimo(data: {
+    idTomador: string;
+    prazo: number;
+    montante: number;
+    juros: number;
+    dataFim?: string;
+  }): Promise<Emprestimo> {
+    const { idTomador, montante, juros } = data;
 
-    // verifica se o tomador existe
-    const tomador = await this.usuarioRepo.findOne({ where: { id: idTomador as any } });
+    const tomador = await this.usuarioRepo.findOne({
+      where: { id: idTomador },
+    });
     if (!tomador) {
       throw new Error("Tomador não encontrado");
     }
 
-    // verifica se já há empréstimo em aberto
+    if (tomador.role == "investidor")
+      throw new Error(
+        "Usuário não possui credenciais para solicitar empréstimo"
+      );
+
     const emprestimoExistente = await this.emprestimoRepo.findOne({
       where: {
-        idTomador: tomador,
-        status: "em andamento",
+        tomador: { id: tomador.id },
+        status: "aprovado",
       },
     });
 
@@ -33,9 +44,20 @@ export class EmprestimoService {
       throw new Error("Você já possui um empréstimo em aberto");
     }
 
+    if (!montante || montante <= 0) {
+      throw new Error("Montante deve ser maior que zero");
+    }
+
+    if (!juros || juros < 0) {
+      throw new Error("Juros deve ser um valor não negativo");
+    }
+
     const emprestimo = this.emprestimoRepo.create({
-      ...data,
-      idTomador: tomador,
+      prazo: data.prazo,
+      montante: data.montante,
+      juros: data.juros,
+      dataFim: data.dataFim ? new Date(data.dataFim) : undefined,
+      tomador: tomador,
     });
 
     return this.emprestimoRepo.save(emprestimo);
@@ -49,7 +71,10 @@ export class EmprestimoService {
     return this.emprestimoRepo.findOne({ where: { id } });
   }
 
-  async updateEmprestimo(id: string, updates: Partial<Emprestimo>): Promise<Emprestimo> {
+  async updateEmprestimo(
+    id: string,
+    updates: Partial<Emprestimo>
+  ): Promise<Emprestimo> {
     const emprestimo = await this.getEmprestimoById(id);
     if (!emprestimo) throw new Error("Empréstimo não encontrado");
 

@@ -15,7 +15,7 @@ export class Investimento {
   id!: string;
 
   @ManyToOne(() => Usuario, { eager: true })
-  idAdministrador!: Usuario;
+  idAdministrador!: Usuario["id"];
 
   @Column({
     type: "enum",
@@ -36,6 +36,6 @@ export class Investimento {
   @CreateDateColumn()
   dataInicio!: Date;
 
-  @Column({ type: "timestamp", nullable: true })
-  dataFim?: Date;
+  @Column({ type: "timestamp"})
+  dataFim!: Date;
 }

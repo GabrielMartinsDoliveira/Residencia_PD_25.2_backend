@@ -29,7 +29,10 @@ export class Pagamento {
   })
   status!: StatusPagamento;
 
-  @Column()
+  @Column({
+    type: "enum",
+    enum: ["pix", "boleto"],
+  })
   metodo!: string;
 
   @Column("decimal", { precision: 10, scale: 2 })
@@ -37,9 +40,6 @@ export class Pagamento {
 
   @Column("decimal", { precision: 10, scale: 2, nullable: true })
   multa?: number;
-
-  @Column("decimal", { precision: 10, scale: 2 })
-  saldoDevedor!: number;
 
   @Column({ type: "timestamp" })
   dataPagamento!: Date;
