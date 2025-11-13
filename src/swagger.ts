@@ -1,4 +1,3 @@
-// src/swagger.js
 import swaggerJsDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -12,12 +11,11 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:3000", // Altere se necessário
+        url: "https://residencia-crowndfundig-backend.onrender.com/",
         description: "Servidor local",
       },
     ],
   },
-  // 👇 Aqui é onde o Swagger procura as anotações
   apis: ["./src/routes/*.ts"],
 };
 
