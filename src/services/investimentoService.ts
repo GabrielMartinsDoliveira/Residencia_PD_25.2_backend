@@ -12,48 +12,86 @@ export class InvestimentoService {
     this.usuarioRepo = AppDataSource.getRepository(Usuario);
   }
 
-  async createInvestimento(data: Partial<Investimento>): Promise<Investimento> {
-    const { idAdministrador } = data;
+  private mapInvestimento(i: Investimento) {
+    return {
+      id: i.id,
+      status: i.status,
+      prazo: i.prazo,
+      valor: i.valor,
+      totalInvestido: i.totalInvestido,
+      juros: i.juros,
+      dataInicio: i.dataInicio,
+      dataFim: i.dataFim,
+      administrador: {
+        id: i.administrador.id,
+        nome: i.administrador.nome,
+      },
+      investidores:
+        i.investidores?.map((inv) => ({
+          id: inv.id,
+          nome: inv.nome,
+        })) || [],
+    };
+  }
 
-    const administrador = await this.usuarioRepo.findOne({
-      where: { id: idAdministrador},
+  async createInvestimento(data: Partial<Investimento>) {
+    const { administrador } = data;
+
+    const admin = await this.usuarioRepo.findOne({
+      where: { id: administrador?.id },
     });
 
-    if (!administrador) {
+    if (!admin) {
       throw new Error("Administrador não encontrado");
     }
 
-    if(administrador.role !== "admin"){
-      throw new Error("O usuário não possui credenciais para criar um investimento")
+    if (admin.role !== "admin") {
+      throw new Error(
+        "O usuário não possui credenciais para criar um investimento"
+      );
     }
 
     const investimento = this.investimentoRepo.create({
       ...data,
-      idAdministrador: administrador.id,
+      administrador: admin,
     });
 
-    return this.investimentoRepo.save(investimento);
+    const saved = await this.investimentoRepo.save(investimento);
+
+    return this.mapInvestimento(saved);
   }
 
-  async getInvestimentos(): Promise<Investimento[]> {
-    return this.investimentoRepo.find();
+  async getInvestimentos() {
+    const items = await this.investimentoRepo.find();
+    return items.map(this.mapInvestimento);
   }
 
-  async getInvestimentoById(id: string): Promise<Investimento | null> {
-    return this.investimentoRepo.findOne({ where: { id } });
+  async getInvestimentoById(id: string) {
+    const item = await this.investimentoRepo.findOne({ where: { id } });
+    return item ? this.mapInvestimento(item) : null;
   }
 
-  async updateStatusInvestimento(id: string, status: string): Promise<Investimento> {
-    const investimento = await this.getInvestimentoById(id);
-    if (!investimento) throw new Error("Investimento não encontrado");
-    
+  async updateStatusInvestimento(id: string, status: string) {
+    const investimento = await this.investimentoRepo.findOne({ where: { id } });
+
+    if (!investimento) {
+      throw new Error("Investimento não encontrado");
+    }
+
     investimento.status = status as any;
-    return this.investimentoRepo.save(investimento);
+
+    const updated = await this.investimentoRepo.save(investimento);
+
+    return this.mapInvestimento(updated);
   }
 
   async deleteInvestimento(id: string): Promise<void> {
-    const investimento = await this.getInvestimentoById(id);
-    if (!investimento) throw new Error("Investimento não encontrado");
+    const investimento = await this.investimentoRepo.findOne({ where: { id } });
+
+    if (!investimento) {
+      throw new Error("Investimento não encontrado");
+    }
+
     await this.investimentoRepo.remove(investimento);
   }
 }

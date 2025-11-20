@@ -3,6 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  ManyToMany,
+  JoinColumn,
+  JoinTable,
   CreateDateColumn,
 } from "typeorm";
 import { Usuario } from "./Usuario.js";
@@ -15,7 +18,16 @@ export class Investimento {
   id!: string;
 
   @ManyToOne(() => Usuario, { eager: true })
-  idAdministrador!: Usuario["id"];
+  @JoinColumn({ name: "administradorId" })
+  administrador!: Usuario;
+
+  @ManyToMany(() => Usuario, { eager: true })
+  @JoinTable({
+    name: "investimento_investidores",
+    joinColumn: { name: "investimentoId" },
+    inverseJoinColumn: { name: "usuarioId" },
+  })
+  investidores!: Usuario[];
 
   @Column({
     type: "enum",
@@ -30,12 +42,15 @@ export class Investimento {
   @Column({ type: "decimal", precision: 10, scale: 2 })
   valor!: number;
 
+  @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
+  totalInvestido!: number;
+
   @Column({ type: "decimal", precision: 5, scale: 2 })
   juros!: number;
 
   @CreateDateColumn()
   dataInicio!: Date;
 
-  @Column({ type: "timestamp"})
+  @Column({ type: "timestamp" })
   dataFim!: Date;
 }

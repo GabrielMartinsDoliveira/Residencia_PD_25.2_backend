@@ -11,8 +11,8 @@ const options = {
     },
     servers: [
       {
-        url: "https://residencia-crowndfundig-backend.onrender.com/",
-        description: "Servidor local",
+        url: "https://residencia-crowndfundig-backend.onrender.com",
+        description: "Back-end",
       },
     ],
   },

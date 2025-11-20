@@ -58,34 +58,6 @@ export class Emprestimo {
   @Column({ type: "timestamp" })
   dataFim!: Date;
 
-  @BeforeInsert()
-  setDefaultSaldoDevedorOnInsert() {
-    this.calcularSaldoDevedor();
-  }
-
-  @BeforeUpdate()
-  setDefaultSaldoDevedorOnUpdate() {
-    // Só recalcula se o empréstimo está sendo criado ou se montante/juros foram modificados
-    if (!this.id || this.montanteChanged || this.jurosChanged) {
-      this.calcularSaldoDevedor();
-    }
-  }
-
-  private calcularSaldoDevedor() {
-    // Se saldoDevedor não foi definido ou é zero, calcula com base no montante e juros
-    if (
-      this.montante &&
-      this.juros !== undefined &&
-      this.juros !== null &&
-      (!this.saldoDevedor || this.saldoDevedor === 0)
-    ) {
-      const jurosDecimal = Number(this.juros) / 100; // Converte porcentagem para decimal
-      const valorComJuros = Number(this.montante) * (1 + jurosDecimal);
-      this.saldoDevedor = Number(valorComJuros.toFixed(2));
-    }
-  }
-
-  // Campos auxiliares para detectar mudanças (opcional)
-  private montanteChanged: boolean = false;
-  private jurosChanged: boolean = false;
+  @Column({ type: "int" })
+  codigoTransacao!:number
 }

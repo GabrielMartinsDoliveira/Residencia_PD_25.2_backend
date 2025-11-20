@@ -38,6 +38,9 @@ export class Usuario {
   @Column({ type: "decimal", default: 0 })
   saldo!: number;
 
+  @Column("varchar")
+  telefone!:string;
+
   // Hook do TypeORM para criptografar a senha
   @BeforeInsert()
   @BeforeUpdate()

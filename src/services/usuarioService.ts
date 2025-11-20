@@ -4,16 +4,22 @@ import { Usuario } from "../models/Usuario.js";
 const usuarioRepository = AppDataSource.getRepository(Usuario);
 
 export const UsuarioService = {
-
   async criarUsuario(dados: Partial<Usuario>): Promise<Usuario> {
     const { email, matricula } = dados;
-   
+
     const usuarioExistente = await usuarioRepository.findOne({
       where: [{ email }, { matricula }],
     });
 
     if (usuarioExistente) {
       throw new Error("Credenciais já foram cadastradas!");
+    }
+
+    if (
+      dados.role !== "admin" &&
+      (!dados.agenciaBancaria || !dados.contaBancaria)
+    ) {
+      throw new Error("Os dados bancários são obrigatórios");
     }
 
     const novoUsuario = usuarioRepository.create(dados);
