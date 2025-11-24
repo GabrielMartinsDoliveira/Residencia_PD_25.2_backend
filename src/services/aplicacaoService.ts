@@ -103,4 +103,13 @@ export class AplicacaoService {
       relations: ["usuario", "investimento"],
     });
   }
+
+  async getAllAplicacoes(): Promise<Aplicacao[]> {
+    const repo = AppDataSource.getRepository(Aplicacao);
+
+    return await repo.find({
+      relations: ["usuario", "investimento"],
+      order: { dataCriacao: "DESC" },
+    });
+  }
 }

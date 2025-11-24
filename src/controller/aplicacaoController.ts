@@ -3,6 +3,7 @@ import { AplicacaoService } from "../services/aplicacaoService.js";
 
 const service = new AplicacaoService();
 
+// Funções existentes
 export const aplicarEmInvestimento = async (req: Request, res: Response) => {
   try {
     const { usuarioId, valor } = req.body;
@@ -60,6 +61,41 @@ export const getAplicacaoById = async (req: Request, res: Response) => {
     }
 
     res.status(200).json(aplicacao);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// NOVAS FUNÇÕES PARA COMPLETAR O ROUTER
+
+/**
+ * Listar todas as aplicações
+ */
+export const getAllAplicacoes = async (req: Request, res: Response) => {
+  try {
+    const aplicacoes = await service.getAllAplicacoes();
+    res.status(200).json(aplicacoes);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+/**
+ * Criar uma nova aplicação (rota alternativa)
+ */
+export const createAplicacao = async (req: Request, res: Response) => {
+  try {
+    const { usuarioId, investimentoId, valor } = req.body;
+
+    if (!usuarioId || !investimentoId || !valor) {
+      return res.status(400).json({ 
+        error: "Campos obrigatórios: usuarioId, investimentoId, valor" 
+      });
+    }
+
+    const aplicacao = await service.aplicar(usuarioId, investimentoId, valor);
+    
+    res.status(201).json(aplicacao);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

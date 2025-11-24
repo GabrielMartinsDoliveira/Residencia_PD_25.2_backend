@@ -4,6 +4,8 @@ import {
   getAplicacoesPorInvestimento,
   getAplicacoesPorUsuario,
   getAplicacaoById,
+  getAllAplicacoes,
+  createAplicacao
 } from "../controller/aplicacaoController.js";
 
 const router = Router();
@@ -78,6 +80,7 @@ const router = Router();
  *       type: object
  *       required:
  *         - usuarioId
+ *         - investimentoId
  *         - valor
  *       properties:
  *         usuarioId:
@@ -85,6 +88,11 @@ const router = Router();
  *           format: uuid
  *           description: ID do usuário investidor
  *           example: "c5f2d4b6-2f8a-4e1c-9f85-12ad1f5e59a0"
+ *         investimentoId:
+ *           type: string
+ *           format: uuid
+ *           description: ID do investimento
+ *           example: "d6e7f8a9-3b4c-5d6e-7f8a-9b0c1d2e3f4a"
  *         valor:
  *           type: number
  *           format: double
@@ -94,18 +102,28 @@ const router = Router();
 
 /**
  * @swagger
- * /investimentos/{investimentoId}/aplicar:
- *   post:
- *     summary: Aplicar um valor em um investimento
+ * /aplicacoes:
+ *   get:
+ *     summary: Listar todas as aplicações
  *     tags: [Aplicações]
- *     parameters:
- *       - in: path
- *         name: investimentoId
- *         required: true
- *         description: ID do investimento (UUID)
- *         schema:
- *           type: string
- *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Lista de aplicações retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Aplicacao'
+ */
+router.get("/", getAllAplicacoes);
+
+/**
+ * @swagger
+ * /aplicacoes:
+ *   post:
+ *     summary: Criar uma nova aplicação
+ *     tags: [Aplicações]
  *     requestBody:
  *       required: true
  *       content:
@@ -114,135 +132,15 @@ const router = Router();
  *             $ref: '#/components/schemas/AplicacaoCreate'
  *     responses:
  *       201:
- *         description: Aplicação realizada com sucesso
+ *         description: Aplicação criada com sucesso
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Aplicacao'
  *       400:
  *         description: Erro na requisição
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Campos obrigatórios: usuarioId, valor"
- *       404:
- *         description: Recurso não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Investimento não encontrado"
- *       409:
- *         description: Conflito na aplicação
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Saldo insuficiente para realizar a aplicação"
  */
-router.post("/investimentos/:investimentoId/aplicar", aplicarEmInvestimento);
-
-/**
- * @swagger
- * /investimentos/{investimentoId}/aplicacoes:
- *   get:
- *     summary: Listar aplicações de um investimento
- *     tags: [Aplicações]
- *     parameters:
- *       - in: path
- *         name: investimentoId
- *         required: true
- *         description: ID do investimento (UUID)
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Lista de aplicações retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Aplicacao'
- *       400:
- *         description: Erro ao buscar aplicações
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erro ao buscar aplicações do investimento"
- *       404:
- *         description: Investimento não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Investimento não encontrado"
- */
-router.get("/investimentos/:investimentoId/aplicacoes", getAplicacoesPorInvestimento);
-
-/**
- * @swagger
- * /usuarios/{usuarioId}/aplicacoes:
- *   get:
- *     summary: Listar aplicações feitas por um usuário
- *     tags: [Aplicações]
- *     parameters:
- *       - in: path
- *         name: usuarioId
- *         required: true
- *         description: ID do usuário (UUID)
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Lista de aplicações retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Aplicacao'
- *       400:
- *         description: Erro ao buscar aplicações
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erro ao buscar aplicações do usuário"
- *       404:
- *         description: Usuário não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Usuário não encontrado"
- */
-router.get("/usuarios/:usuarioId/aplicacoes", getAplicacoesPorUsuario);
+router.post("/", createAplicacao);
 
 /**
  * @swagger
@@ -267,25 +165,103 @@ router.get("/usuarios/:usuarioId/aplicacoes", getAplicacoesPorUsuario);
  *               $ref: '#/components/schemas/Aplicacao'
  *       404:
  *         description: Aplicação não encontrada
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Aplicação não encontrada"
- *       400:
- *         description: Erro na requisição
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "ID inválido"
  */
-router.get("/aplicacoes/:id", getAplicacaoById);
+router.get("/:id", getAplicacaoById);
+
+/**
+ * @swagger
+ * /aplicacoes/investimento/{investimentoId}:
+ *   get:
+ *     summary: Listar aplicações de um investimento
+ *     tags: [Aplicações]
+ *     parameters:
+ *       - in: path
+ *         name: investimentoId
+ *         required: true
+ *         description: ID do investimento (UUID)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Lista de aplicações retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Aplicacao'
+ *       404:
+ *         description: Investimento não encontrado
+ */
+router.get("/investimento/:investimentoId", getAplicacoesPorInvestimento);
+
+/**
+ * @swagger
+ * /aplicacoes/usuario/{usuarioId}:
+ *   get:
+ *     summary: Listar aplicações feitas por um usuário
+ *     tags: [Aplicações]
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         description: ID do usuário (UUID)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Lista de aplicações retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Aplicacao'
+ *       404:
+ *         description: Usuário não encontrado
+ */
+router.get("/usuario/:usuarioId", getAplicacoesPorUsuario);
+
+/**
+ * @swagger
+ * /aplicacoes/investimento/{investimentoId}/aplicar:
+ *   post:
+ *     summary: Aplicar um valor em um investimento (rota alternativa)
+ *     tags: [Aplicações]
+ *     parameters:
+ *       - in: path
+ *         name: investimentoId
+ *         required: true
+ *         description: ID do investimento (UUID)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - usuarioId
+ *               - valor
+ *             properties:
+ *               usuarioId:
+ *                 type: string
+ *                 format: uuid
+ *               valor:
+ *                 type: number
+ *                 format: double
+ *     responses:
+ *       201:
+ *         description: Aplicação realizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Aplicacao'
+ */
+router.post("/investimento/:investimentoId/aplicar", aplicarEmInvestimento);
 
 export default router;
