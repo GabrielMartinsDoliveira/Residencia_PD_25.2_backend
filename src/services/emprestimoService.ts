@@ -13,14 +13,14 @@ export class EmprestimoService {
   }
 
   async createEmprestimo(data: {
-    idTomador: string;
+    tomadorId: string;
     prazo: number;
     montante: number;
     juros: number;
     dataFim?: string;
     codigoTransacao: number;
   }): Promise<Emprestimo> {
-    const { idTomador, montante, juros, codigoTransacao } = data;
+    const { tomadorId, montante, juros, codigoTransacao } = data;
 
     const codigoExistente = await this.emprestimoRepo.findOne({
       where: { codigoTransacao },
@@ -31,7 +31,7 @@ export class EmprestimoService {
     }
 
     const tomador = await this.usuarioRepo.findOne({
-      where: { id: idTomador },
+      where: { id: tomadorId },
     });
 
     if (!tomador) {
