@@ -6,13 +6,17 @@ const options = {
     openapi: "3.0.0",
     info: {
       title: "API do Sistema de Empréstimos",
-      version: "1.0.0",
+      version: "1.4.0",
       description: "Documentação da API de Empréstimos, Pagamentos e Usuários",
     },
     servers: [
       {
         url: "https://residencia-crowndfundig-backend.onrender.com",
-        description: "Back-end",
+        description: "Servidor de Produção",
+      },
+      {
+        url: "http://localhost:3000",
+        description: "Servidor Local de Desenvolvimento",
       },
     ],
   },
