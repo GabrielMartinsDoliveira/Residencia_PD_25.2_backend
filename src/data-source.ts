@@ -5,6 +5,7 @@ import { Pagamento } from "./models/Pagamento.js";
 import { Emprestimo } from "./models/Emprestimo.js";
 import { Investimento } from "./models/Investimento.js";
 import dotenv from "dotenv";
+import { Aplicacao } from "./models/Aplicacao.js";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -12,7 +13,7 @@ export const AppDataSource = new DataSource({
   url: process.env.DATABASE_URL,
   synchronize: true,
   logging: false,
-  entities: [Usuario, Pagamento, Emprestimo, Investimento],
+  entities: [Usuario, Pagamento, Emprestimo, Investimento, Aplicacao],
 
   extra: {
     ssl: {

@@ -25,7 +25,7 @@ app.use("/aplicações", aplicacaoRoutes);
 app.use("/emprestimos", emprestimoRoutes);
 app.use("/pagamentos", pagamentoRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 AppDataSource.initialize()
   .then(() => {
