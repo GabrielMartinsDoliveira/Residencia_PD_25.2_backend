@@ -55,13 +55,17 @@ export class Emprestimo {
   @CreateDateColumn()
   dataInicio!: Date;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: "timestamp", nullable: false })
   dataFim!: Date;
 
-  @Column({ type: "int", nullable: true })
+  @Column({
+    type: "int",
+    nullable: false,
+    generated: "increment",
+    unique: true,
+  })
   codigoTransacao!: number;
 
-  
   @BeforeInsert()
   initSaldoDevedor() {
     this.saldoDevedor = Number(this.montante);

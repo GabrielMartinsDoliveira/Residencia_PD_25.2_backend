@@ -14,10 +14,9 @@ export class Pagamento {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  // Vários pagamentos pertencem a um empréstimo
   @ManyToOne(() => Emprestimo, (emprestimo) => emprestimo.pagamentos, {
-    eager: false, // evita carregar todos os empréstimos automaticamente
-    onDelete: "CASCADE", // se o empréstimo for apagado, apaga pagamentos
+    eager: false,
+    onDelete: "CASCADE",
   })
   @JoinColumn({ name: "idEmprestimo" })
   emprestimo!: Emprestimo;
@@ -41,8 +40,8 @@ export class Pagamento {
   @Column("decimal", { precision: 10, scale: 2, nullable: true })
   multa?: number;
 
-  @Column({ type: "timestamp" })
-  dataPagamento!: Date;
+  @Column({ type: "timestamp", nullable: true })
+  dataPagamento!: Date | null;
 
   @Column({ type: "timestamp" })
   dataVencimento!: Date;

@@ -5,7 +5,6 @@ import {
   getAplicacoesPorUsuario,
   getAplicacaoById,
   getAllAplicacoes,
-  createAplicacao
 } from "../controller/aplicacaoController.js";
 
 const router = Router();
@@ -140,7 +139,7 @@ router.get("/", getAllAplicacoes);
  *       400:
  *         description: Erro na requisição
  */
-router.post("/", createAplicacao);
+router.post("/", aplicarEmInvestimento);
 
 /**
  * @swagger
@@ -194,7 +193,7 @@ router.get("/:id", getAplicacaoById);
  *       404:
  *         description: Investimento não encontrado
  */
-router.get("/investimento/:investimentoId", getAplicacoesPorInvestimento);
+router.get("/:investimentoId", getAplicacoesPorInvestimento);
 
 /**
  * @swagger
@@ -222,46 +221,6 @@ router.get("/investimento/:investimentoId", getAplicacoesPorInvestimento);
  *       404:
  *         description: Usuário não encontrado
  */
-router.get("/usuario/:usuarioId", getAplicacoesPorUsuario);
-
-/**
- * @swagger
- * /aplicacoes/investimento/{investimentoId}/aplicar:
- *   post:
- *     summary: Aplicar um valor em um investimento (rota alternativa)
- *     tags: [Aplicações]
- *     parameters:
- *       - in: path
- *         name: investimentoId
- *         required: true
- *         description: ID do investimento (UUID)
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - usuarioId
- *               - valor
- *             properties:
- *               usuarioId:
- *                 type: string
- *                 format: uuid
- *               valor:
- *                 type: number
- *                 format: double
- *     responses:
- *       201:
- *         description: Aplicação realizada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Aplicacao'
- */
-router.post("/investimento/:investimentoId/aplicar", aplicarEmInvestimento);
+router.get("/:usuarioId", getAplicacoesPorUsuario);
 
 export default router;

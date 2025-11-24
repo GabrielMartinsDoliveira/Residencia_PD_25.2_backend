@@ -2,6 +2,7 @@ import { AppDataSource } from "../data-source.js";
 import { Emprestimo } from "../models/Emprestimo.js";
 import { Usuario } from "../models/Usuario.js";
 import { Repository } from "typeorm";
+import { PagamentoService } from "./pagamentoService.js";
 
 export class EmprestimoService {
   private emprestimoRepo: Repository<Emprestimo>;
@@ -17,118 +18,124 @@ export class EmprestimoService {
     prazo: number;
     montante: number;
     juros: number;
-    dataFim?: string;
-    codigoTransacao: number;
-  }): Promise<Emprestimo> {
-    const { tomadorId, montante, juros, codigoTransacao } = data;
-
-    const codigoExistente = await this.emprestimoRepo.findOne({
-      where: { codigoTransacao },
-    });
-
-    if (codigoExistente) {
-      throw new Error("Código de transação já está em uso");
-    }
+    dataFim?: Date;
+  }) {
+    const { tomadorId, prazo, montante, juros, dataFim } = data;
 
     const tomador = await this.usuarioRepo.findOne({
       where: { id: tomadorId },
     });
 
     if (!tomador) {
-      throw new Error("Tomador não encontrado");
+      throw new Error("Tomador não encontrado.");
     }
 
     if (tomador.role !== "tomador") {
       throw new Error(
-        "Usuário não possui credenciais para solicitar empréstimo"
+        "Apenas usuários com role 'tomador' podem solicitar empréstimos."
       );
     }
 
-    const emprestimoExistente = await this.emprestimoRepo.findOne({
-      where: {
-        tomador: { id: tomador.id },
-        status: "em analise",
-      },
-    });
-
-    if (emprestimoExistente) {
-      throw new Error("Você já possui um empréstimo em análise");
-    }
-
-    if (!montante || montante <= 0) {
-      throw new Error("Montante deve ser maior que zero");
-    }
-
-    if (!juros || juros < 0) {
-      throw new Error("Juros deve ser um valor não negativo");
-    }
-
-    if (!codigoTransacao) {
-      throw new Error("Código de transação é obrigatório");
-    }
-
     const emprestimo = this.emprestimoRepo.create({
-      prazo: data.prazo,
-      montante: data.montante,
-      juros: data.juros,
-      saldoDevedor: data.montante,
-      codigoTransacao: data.codigoTransacao,
-      dataFim: data.dataFim ? new Date(data.dataFim) : undefined,
-      tomador: tomador,
+      tomador,
+      prazo,
+      montante,
+      juros,
+      saldoDevedor: montante,
+      dataInicio: new Date(),
+      dataFim,
       status: "em analise",
     });
 
-    return this.emprestimoRepo.save(emprestimo);
+    const saved = await this.emprestimoRepo.save(emprestimo);
+
+    const pagamentosGerados =
+      await PagamentoService.gerarPagamentosParaEmprestimo(saved);
+
+    return {
+      ...saved,
+      pagamentos: pagamentosGerados,
+    };
   }
 
-  async getEmprestimos(): Promise<Emprestimo[]> {
-    return this.emprestimoRepo.find({
-      relations: ["tomador"],
-    });
-  }
-
-  async getEmprestimoById(id: string): Promise<Emprestimo | null> {
-    return this.emprestimoRepo.findOne({
-      where: { id },
-      relations: ["tomador"],
-    });
-  }
-
-  async getEmprestimosPorTomador(tomadorId: string): Promise<Emprestimo[]> {
-    return this.emprestimoRepo.find({
-      where: { tomador: { id: tomadorId } },
-      relations: ["tomador"],
+  async getEmprestimos() {
+    return await this.emprestimoRepo.find({
+      relations: ["tomador", "pagamentos"],
       order: { dataInicio: "DESC" },
     });
   }
 
-  async updateEmprestimo(
-    id: string,
-    updates: Partial<Emprestimo>
-  ): Promise<Emprestimo> {
-    const emprestimo = await this.getEmprestimoById(id);
-    if (!emprestimo) throw new Error("Empréstimo não encontrado");
+  async getEmprestimoById(id: string) {
+    const emprestimo = await this.emprestimoRepo.findOne({
+      where: { id },
+      relations: ["tomador", "pagamentos"],
+    });
 
-    if (
-      updates.codigoTransacao &&
-      updates.codigoTransacao !== emprestimo.codigoTransacao
-    ) {
-      const codigoExistente = await this.emprestimoRepo.findOne({
-        where: { codigoTransacao: updates.codigoTransacao },
-      });
-
-      if (codigoExistente) {
-        throw new Error("Código de transação já está em uso");
-      }
+    if (!emprestimo) {
+      throw new Error("Empréstimo não encontrado");
     }
 
-    Object.assign(emprestimo, updates);
-    return this.emprestimoRepo.save(emprestimo);
+    return emprestimo;
   }
 
-  async deleteEmprestimo(id: string): Promise<void> {
-    const emprestimo = await this.getEmprestimoById(id);
+  async getEmprestimosPorTomador(tomadorId: string) {
+    const emprestimos = await this.emprestimoRepo.find({
+      where: {
+        tomador: { id: tomadorId },
+      },
+      relations: ["tomador", "pagamentos"],
+    });
+
+    return emprestimos;
+  }
+
+  async updateEmprestimo(id: string, data: Partial<Emprestimo>) {
+    const emprestimo = await this.emprestimoRepo.findOne({
+      where: { id },
+      relations: ["pagamentos"],
+    });
+
     if (!emprestimo) throw new Error("Empréstimo não encontrado");
+
+    if (emprestimo.status === "quitado") {
+      throw new Error("Não é possível alterar um empréstimo já quitado.");
+    }
+
+    if (["aprovado", "negado"].includes(emprestimo.status)) {
+      delete data.montante;
+      delete data.prazo;
+      delete data.juros;
+    }
+
+    Object.assign(emprestimo, data);
+
+    return await this.emprestimoRepo.save(emprestimo);
+  }
+
+  async deleteEmprestimo(id: string) {
+    const emprestimo = await this.emprestimoRepo.findOne({
+      where: { id },
+      relations: ["pagamentos"],
+    });
+
+    if (!emprestimo) throw new Error("Empréstimo não encontrado");
+
+    if (emprestimo.status === "quitado") {
+      throw new Error("Não é possível excluir um empréstimo quitado.");
+    }
+
+    const temPagamentosPagos = emprestimo.pagamentos.some(
+      (p) => p.status === "pago"
+    );
+
+    if (temPagamentosPagos) {
+      throw new Error(
+        "Não é possível excluir um empréstimo com pagamentos já realizados."
+      );
+    }
+
     await this.emprestimoRepo.remove(emprestimo);
+
+    return { message: "Empréstimo excluído com sucesso" };
   }
 }

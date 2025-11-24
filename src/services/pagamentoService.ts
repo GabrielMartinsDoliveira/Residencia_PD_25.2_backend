@@ -6,13 +6,56 @@ const pagamentoRepository = AppDataSource.getRepository(Pagamento);
 const emprestimoRepository = AppDataSource.getRepository(Emprestimo);
 
 export const PagamentoService = {
-  
+
+  /**
+   * Gera uma lista de pagamentos baseada no prazo e no montante do empréstimo
+   */
+  async gerarPagamentosParaEmprestimo(emprestimo: Emprestimo): Promise<Pagamento[]> {
+    const pagamentosGerados: Pagamento[] = [];
+
+    const prazo = Number(emprestimo.prazo); // em meses ou dias
+    const montante = Number(emprestimo.montante);
+    const juros = Number(emprestimo.juros) / 100;
+
+    // === TABELA PRICE ===
+    const i = juros;
+    const n = prazo;
+
+    const valorParcela =
+      i > 0
+        ? montante * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
+        : montante / n;
+
+    // Gerar datas de vencimento
+    const hoje = new Date();
+
+    for (let k = 1; k <= n; k++) {
+      const venc = new Date(hoje);
+      venc.setMonth(venc.getMonth() + k); // parcela mensal
+
+      const pagamento = pagamentoRepository.create({
+        emprestimo,
+        status: "em aberto",
+        metodo: "boleto",
+        valor: Number(valorParcela.toFixed(2)),
+        dataPagamento: null,
+        dataVencimento: venc
+      });
+
+      pagamentosGerados.push(pagamento);
+    }
+
+    return await pagamentoRepository.save(pagamentosGerados);
+  },
+
+  /**
+   * Criar pagamento individual (caso necessário)
+   */
   async criarPagamento(dados: Partial<Pagamento>): Promise<Pagamento> {
     if (!dados.emprestimo || !dados.emprestimo.id) {
       throw new Error("É necessário informar o ID do empréstimo.");
     }
 
-    // Buscar o empréstimo
     const emprestimo = await emprestimoRepository.findOne({
       where: { id: dados.emprestimo.id },
     });
@@ -21,23 +64,17 @@ export const PagamentoService = {
       throw new Error("Empréstimo não encontrado");
     }
 
-    // Criar pagamento
     const pagamento = pagamentoRepository.create(dados);
     const saved = await pagamentoRepository.save(pagamento);
 
-    // Se não for pago, não abate saldo
+    // Só desconta saldo se pago
     if (saved.status !== "pago") return saved;
 
-    // Abater saldo do empréstimo
     let valorPagamento = Number(saved.valor);
+    if (saved.multa) valorPagamento += Number(saved.multa);
 
-    if (saved.multa) {
-      valorPagamento += Number(saved.multa);
-    }
+    emprestimo.saldoDevedor -= valorPagamento;
 
-    emprestimo.saldoDevedor = Number(emprestimo.saldoDevedor) - valorPagamento;
-
-    // Se quitou
     if (emprestimo.saldoDevedor <= 0) {
       emprestimo.saldoDevedor = 0;
       emprestimo.status = "quitado";
@@ -70,8 +107,7 @@ export const PagamentoService = {
     pagamento.status = status as any;
     const saved = await pagamentoRepository.save(pagamento);
 
-    // Se o status mudou para "pago", abater do empréstimo
-    if (status === "pago" && pagamento.emprestimo) {
+    if (status === "pago") {
       const emprestimo = pagamento.emprestimo;
 
       let valor = Number(pagamento.valor);
