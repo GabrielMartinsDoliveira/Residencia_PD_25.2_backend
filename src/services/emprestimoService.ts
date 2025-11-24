@@ -18,30 +18,41 @@ export class EmprestimoService {
     montante: number;
     juros: number;
     dataFim?: string;
+    codigoTransacao: number;
   }): Promise<Emprestimo> {
-    const { idTomador, montante, juros } = data;
+    const { idTomador, montante, juros, codigoTransacao } = data;
+
+    const codigoExistente = await this.emprestimoRepo.findOne({
+      where: { codigoTransacao },
+    });
+
+    if (codigoExistente) {
+      throw new Error("Código de transação já está em uso");
+    }
 
     const tomador = await this.usuarioRepo.findOne({
       where: { id: idTomador },
     });
+
     if (!tomador) {
       throw new Error("Tomador não encontrado");
     }
 
-    if (tomador.role == "investidor")
+    if (tomador.role !== "tomador") {
       throw new Error(
         "Usuário não possui credenciais para solicitar empréstimo"
       );
+    }
 
     const emprestimoExistente = await this.emprestimoRepo.findOne({
       where: {
         tomador: { id: tomador.id },
-        status: "aprovado",
+        status: "em analise",
       },
     });
 
     if (emprestimoExistente) {
-      throw new Error("Você já possui um empréstimo em aberto");
+      throw new Error("Você já possui um empréstimo em análise");
     }
 
     if (!montante || montante <= 0) {
@@ -52,23 +63,43 @@ export class EmprestimoService {
       throw new Error("Juros deve ser um valor não negativo");
     }
 
+    if (!codigoTransacao) {
+      throw new Error("Código de transação é obrigatório");
+    }
+
     const emprestimo = this.emprestimoRepo.create({
       prazo: data.prazo,
       montante: data.montante,
       juros: data.juros,
+      saldoDevedor: data.montante,
+      codigoTransacao: data.codigoTransacao,
       dataFim: data.dataFim ? new Date(data.dataFim) : undefined,
       tomador: tomador,
+      status: "em analise",
     });
 
     return this.emprestimoRepo.save(emprestimo);
   }
 
   async getEmprestimos(): Promise<Emprestimo[]> {
-    return this.emprestimoRepo.find();
+    return this.emprestimoRepo.find({
+      relations: ["tomador"],
+    });
   }
 
   async getEmprestimoById(id: string): Promise<Emprestimo | null> {
-    return this.emprestimoRepo.findOne({ where: { id } });
+    return this.emprestimoRepo.findOne({
+      where: { id },
+      relations: ["tomador"],
+    });
+  }
+
+  async getEmprestimosPorTomador(tomadorId: string): Promise<Emprestimo[]> {
+    return this.emprestimoRepo.find({
+      where: { tomador: { id: tomadorId } },
+      relations: ["tomador"],
+      order: { dataInicio: "DESC" },
+    });
   }
 
   async updateEmprestimo(
@@ -77,6 +108,19 @@ export class EmprestimoService {
   ): Promise<Emprestimo> {
     const emprestimo = await this.getEmprestimoById(id);
     if (!emprestimo) throw new Error("Empréstimo não encontrado");
+
+    if (
+      updates.codigoTransacao &&
+      updates.codigoTransacao !== emprestimo.codigoTransacao
+    ) {
+      const codigoExistente = await this.emprestimoRepo.findOne({
+        where: { codigoTransacao: updates.codigoTransacao },
+      });
+
+      if (codigoExistente) {
+        throw new Error("Código de transação já está em uso");
+      }
+    }
 
     Object.assign(emprestimo, updates);
     return this.emprestimoRepo.save(emprestimo);

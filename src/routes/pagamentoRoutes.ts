@@ -14,20 +14,39 @@ const router = Router();
  * @swagger
  * components:
  *   schemas:
- *     Pagamento:
+ *     EmprestimoResumo:
  *       type: object
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
- *           example: "8a3f95a2-2c77-4b9a-b4dc-8b913b3b04df"
- *         idEmprestimo:
+ *         montante:
+ *           type: number
+ *           format: double
+ *         saldoDevedor:
+ *           type: number
+ *           format: double
+ *         status:
  *           type: string
- *           description: ID do empréstimo ao qual o pagamento pertence
- *           example: "6b7a83b4-8f5a-4c99-9b77-05b6a4d09a41"
+ *           enum: ["em analise", "aprovado", "negado", "quitado", "cancelado"]
+ *     Pagamento:
+ *       type: object
+ *       required:
+ *         - emprestimo
+ *         - metodo
+ *         - valor
+ *         - dataVencimento
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: "8a3f95a2-2c77-4b9a-b4dc-8b913b3b04df"
+ *         emprestimo:
+ *           $ref: '#/components/schemas/EmprestimoResumo'
  *         status:
  *           type: string
  *           enum: ["em aberto", "em atraso", "pago"]
+ *           default: "em aberto"
  *           example: "em aberto"
  *         metodo:
  *           type: string
@@ -35,13 +54,17 @@ const router = Router();
  *           example: "pix"
  *         valor:
  *           type: number
- *           format: decimal
+ *           format: double
+ *           precision: 10
+ *           scale: 2
  *           example: 1200.50
  *         multa:
  *           type: number
- *           format: decimal
+ *           format: double
+ *           precision: 10
+ *           scale: 2
  *           nullable: true
- *           example: 50.00 *         
+ *           example: 50.00
  *         dataPagamento:
  *           type: string
  *           format: date-time
@@ -50,6 +73,51 @@ const router = Router();
  *           type: string
  *           format: date-time
  *           example: "2025-03-05T00:00:00.000Z"
+ *     PagamentoCreate:
+ *       type: object
+ *       required:
+ *         - emprestimoId
+ *         - metodo
+ *         - valor
+ *         - dataVencimento
+ *       properties:
+ *         emprestimoId:
+ *           type: string
+ *           format: uuid
+ *           description: ID do empréstimo ao qual o pagamento pertence
+ *           example: "6b7a83b4-8f5a-4c99-9b77-05b6a4d09a41"
+ *         metodo:
+ *           type: string
+ *           enum: ["pix", "boleto"]
+ *           example: "boleto"
+ *         valor:
+ *           type: number
+ *           format: double
+ *           example: 950.00
+ *         multa:
+ *           type: number
+ *           format: double
+ *           nullable: true
+ *           example: 0.00
+ *         dataPagamento:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *           description: Data em que o pagamento foi realizado (preenchida automaticamente quando pago)
+ *           example: "2025-05-15T00:00:00.000Z"
+ *         dataVencimento:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-05-10T00:00:00.000Z"
+ *     PagamentoUpdateStatus:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: ["em aberto", "em atraso", "pago"]
+ *           example: "pago"
  */
 
 /**
@@ -63,41 +131,7 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - idEmprestimo
- *               - metodo
- *               - valor
- *               - saldoDevedor
- *               - dataPagamento
- *               - dataVencimento
- *             properties:
- *               idEmprestimo:
- *                 type: string
- *                 example: "6b7a83b4-8f5a-4c99-9b77-05b6a4d09a41"
- *               metodo:
- *                 type: string
- *                 example: "boleto"
- *               valor:
- *                 type: number
- *                 format: decimal
- *                 example: 950.00
- *               multa:
- *                 type: number
- *                 format: decimal
- *                 example: 0.00
- *               saldoDevedor:
- *                 type: number
- *                 format: decimal
- *                 example: 2050.00
- *               dataPagamento:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-05-15T00:00:00.000Z"
- *               dataVencimento:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-05-10T00:00:00.000Z"
+ *             $ref: '#/components/schemas/PagamentoCreate'
  *     responses:
  *       201:
  *         description: Pagamento criado com sucesso
@@ -107,6 +141,24 @@ const router = Router();
  *               $ref: '#/components/schemas/Pagamento'
  *       400:
  *         description: Erro ao criar pagamento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Empréstimo não encontrado"
+ *       409:
+ *         description: Conflito na criação do pagamento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Já existe um pagamento em aberto para este empréstimo"
  */
 router.post("/", PagamentoController.criar);
 
@@ -127,6 +179,14 @@ router.post("/", PagamentoController.criar);
  *                 $ref: '#/components/schemas/Pagamento'
  *       400:
  *         description: Erro ao listar pagamentos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erro ao buscar pagamentos"
  */
 router.get("/", PagamentoController.listar);
 
@@ -140,7 +200,7 @@ router.get("/", PagamentoController.listar);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do pagamento
+ *         description: ID do pagamento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
@@ -153,8 +213,24 @@ router.get("/", PagamentoController.listar);
  *               $ref: '#/components/schemas/Pagamento'
  *       404:
  *         description: Pagamento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pagamento não encontrado"
  *       400:
  *         description: Erro na requisição
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID inválido"
  */
 router.get("/:id", PagamentoController.buscarPorId);
 
@@ -168,7 +244,7 @@ router.get("/:id", PagamentoController.buscarPorId);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do pagamento
+ *         description: ID do pagamento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
@@ -177,14 +253,7 @@ router.get("/:id", PagamentoController.buscarPorId);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: ["em aberto", "em atraso", "pago"]
- *                 example: "pago"
+ *             $ref: '#/components/schemas/PagamentoUpdateStatus'
  *     responses:
  *       200:
  *         description: Status atualizado com sucesso
@@ -194,6 +263,34 @@ router.get("/:id", PagamentoController.buscarPorId);
  *               $ref: '#/components/schemas/Pagamento'
  *       400:
  *         description: Erro ao atualizar status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Status inválido"
+ *       404:
+ *         description: Pagamento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pagamento não encontrado"
+ *       409:
+ *         description: Conflito na atualização
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Não é possível alterar status de pagamento já quitado"
  */
 router.put("/:id/status", PagamentoController.atualizarStatus);
 
@@ -207,15 +304,41 @@ router.put("/:id/status", PagamentoController.atualizarStatus);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do pagamento
+ *         description: ID do pagamento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
  *     responses:
  *       200:
  *         description: Pagamento excluído com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pagamento excluído"
  *       400:
  *         description: Erro ao excluir pagamento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Não é possível excluir pagamento com status pago"
+ *       404:
+ *         description: Pagamento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pagamento não encontrado"
  */
 router.delete("/:id", PagamentoController.deletar);
 

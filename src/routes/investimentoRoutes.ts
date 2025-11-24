@@ -20,20 +20,42 @@ const router = Router();
  * @swagger
  * components:
  *   schemas:
- *     Investimento:
+ *     UsuarioResumo:
  *       type: object
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
- *           example: "f1e7a2b4-913a-4f89-92bb-65b47c8912fa"
- *         idAdministrador:
+ *         nome:
  *           type: string
- *           description: ID do administrador responsável pelo investimento
- *           example: "c5f2d4b6-2f8a-4e1c-9f85-12ad1f5e59a0"
+ *         email:
+ *           type: string
+ *         role:
+ *           type: string
+ *           enum: ["admin", "tomador", "investidor"]
+ *     Investimento:
+ *       type: object
+ *       required:
+ *         - administrador
+ *         - prazo
+ *         - valor
+ *         - juros
+ *         - dataFim
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: "f1e7a2b4-913a-4f89-92bb-65b47c8912fa"
+ *         administrador:
+ *           $ref: '#/components/schemas/UsuarioResumo'
+ *         investidores:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/UsuarioResumo'
  *         status:
  *           type: string
- *           enum: [ "em andamento", "finalizado", "cancelado" ]
+ *           enum: ["em andamento", "finalizado", "cancelado"]
+ *           default: "em andamento"
  *           example: "em andamento"
  *         prazo:
  *           type: integer
@@ -41,11 +63,22 @@ const router = Router();
  *           example: 180
  *         valor:
  *           type: number
- *           format: decimal
+ *           format: double
+ *           precision: 10
+ *           scale: 2
  *           example: 10000.00
+ *         totalInvestido:
+ *           type: number
+ *           format: double
+ *           precision: 12
+ *           scale: 2
+ *           default: 0
+ *           example: 7500.50
  *         juros:
  *           type: number
- *           format: decimal
+ *           format: double
+ *           precision: 5
+ *           scale: 2
  *           example: 8.5
  *         dataInicio:
  *           type: string
@@ -55,6 +88,45 @@ const router = Router();
  *           type: string
  *           format: date-time
  *           example: "2025-07-15T00:00:00.000Z"
+ *     InvestimentoCreate:
+ *       type: object
+ *       required:
+ *         - administradorId
+ *         - prazo
+ *         - valor
+ *         - juros
+ *         - dataFim
+ *       properties:
+ *         administradorId:
+ *           type: string
+ *           format: uuid
+ *           description: ID do administrador responsável pelo investimento
+ *           example: "c5f2d4b6-2f8a-4e1c-9f85-12ad1f5e59a0"
+ *         prazo:
+ *           type: integer
+ *           description: Prazo do investimento em dias
+ *           example: 365
+ *         valor:
+ *           type: number
+ *           format: double
+ *           example: 5000.00
+ *         juros:
+ *           type: number
+ *           format: double
+ *           example: 7.25
+ *         dataFim:
+ *           type: string
+ *           format: date-time
+ *           example: "2026-01-15T00:00:00.000Z"
+ *     InvestimentoUpdateStatus:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: ["em andamento", "finalizado", "cancelado"]
+ *           example: "finalizado"
  */
 
 /**
@@ -68,32 +140,7 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - idAdministrador
- *               - prazo
- *               - valor
- *               - juros
- *               - dataFim
- *             properties:
- *               idAdministrador:
- *                 type: string
- *                 example: "c5f2d4b6-2f8a-4e1c-9f85-12ad1f5e59a0"
- *               prazo:
- *                 type: integer
- *                 example: 365
- *               valor:
- *                 type: number
- *                 format: decimal
- *                 example: 5000.00
- *               juros:
- *                 type: number
- *                 format: decimal
- *                 example: 7.25
- *               dataFim:
- *                 type: string
- *                 format: date-time
- *                 example: "2026-01-15T00:00:00.000Z"
+ *             $ref: '#/components/schemas/InvestimentoCreate'
  *     responses:
  *       201:
  *         description: Investimento criado com sucesso
@@ -102,7 +149,25 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Investimento'
  *       400:
- *         description: Erro ao criar investimento (usuário não autorizado ou dados inválidos)
+ *         description: Erro ao criar investimento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Administrador não encontrado"
+ *       403:
+ *         description: Usuário não autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Apenas administradores podem criar investimentos"
  */
 router.post("/", createInvestimento);
 
@@ -123,6 +188,14 @@ router.post("/", createInvestimento);
  *                 $ref: '#/components/schemas/Investimento'
  *       400:
  *         description: Erro ao listar investimentos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erro ao buscar investimentos"
  */
 router.get("/", getInvestimentos);
 
@@ -136,7 +209,7 @@ router.get("/", getInvestimentos);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do investimento
+ *         description: ID do investimento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
@@ -149,8 +222,24 @@ router.get("/", getInvestimentos);
  *               $ref: '#/components/schemas/Investimento'
  *       404:
  *         description: Investimento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Investimento não encontrado"
  *       400:
  *         description: Erro na requisição
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "ID inválido"
  */
 router.get("/:id", getInvestimentoById);
 
@@ -164,7 +253,7 @@ router.get("/:id", getInvestimentoById);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do investimento
+ *         description: ID do investimento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
@@ -173,23 +262,36 @@ router.get("/:id", getInvestimentoById);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [ "em andamento", "finalizado", "cancelado" ]
- *                 example: "finalizado"
+ *             $ref: '#/components/schemas/InvestimentoUpdateStatus'
  *     responses:
  *       200:
  *         description: Status atualizado com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Investimento'
+ *               type: string
+ *               enum: ["em andamento", "finalizado", "cancelado"]
+ *               example: "finalizado"
  *       400:
  *         description: Erro ao atualizar status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Status inválido"
+ *       404:
+ *         description: Investimento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Investimento não encontrado"
  */
 router.put("/:id/status", updateStatusInvestimento);
 
@@ -203,15 +305,41 @@ router.put("/:id/status", updateStatusInvestimento);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do investimento
+ *         description: ID do investimento (UUID)
  *         schema:
  *           type: string
  *           format: uuid
  *     responses:
  *       200:
  *         description: Investimento excluído com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Investimento excluído com sucesso"
  *       400:
  *         description: Erro ao excluir investimento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Não é possível excluir investimento com investidores"
+ *       404:
+ *         description: Investimento não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Investimento não encontrado"
  */
 router.delete("/:id", deleteInvestimentoById);
 

@@ -16,22 +16,108 @@ const router = Router();
  *   schemas:
  *     Usuario:
  *       type: object
+ *       required:
+ *         - nome
+ *         - email
+ *         - matricula
+ *         - senha
+ *         - role
+ *         - telefone
  *       properties:
  *         id:
  *           type: string
+ *           format: uuid
  *           example: "c5f2d4b6-2f8a-4e1c-9f85-12ad1f5e59a0"
  *         nome:
  *           type: string
  *           example: "Fulano Silva"
  *         email:
  *           type: string
+ *           format: email
  *           example: "fulanosilva@email.com"
+ *         matricula:
+ *           type: string
+ *           example: "20240001"
+ *         contaBancaria:
+ *           type: string
+ *           nullable: true
+ *           example: "12345-6"
+ *         agenciaBancaria:
+ *           type: string
+ *           nullable: true
+ *           example: "0001"
  *         senha:
  *           type: string
+ *           format: password
  *           example: "123456"
+ *         role:
+ *           type: string
+ *           enum: ["admin", "tomador", "investidor"]
+ *           example: "investidor"
  *         saldo:
  *           type: number
+ *           format: decimal
  *           example: 1500.75
+ *         telefone:
+ *           type: string
+ *           example: "(11) 99999-9999"
+ *     UsuarioCreate:
+ *       type: object
+ *       required:
+ *         - nome
+ *         - email
+ *         - matricula
+ *         - senha
+ *         - role
+ *         - telefone
+ *       properties:
+ *         nome:
+ *           type: string
+ *           example: "Fulano Silva"
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "fulanosilva@email.com"
+ *         matricula:
+ *           type: string
+ *           example: "20240001"
+ *         contaBancaria:
+ *           type: string
+ *           nullable: true
+ *           example: "12345-6"
+ *         agenciaBancaria:
+ *           type: string
+ *           nullable: true
+ *           example: "0001"
+ *         senha:
+ *           type: string
+ *           format: password
+ *           example: "123456"
+ *         role:
+ *           type: string
+ *           enum: ["admin", "tomador", "investidor"]
+ *           example: "investidor"
+ *         telefone:
+ *           type: string
+ *           example: "(11) 99999-9999"
+ *     UsuarioUpdateSenha:
+ *       type: object
+ *       required:
+ *         - senha
+ *       properties:
+ *         senha:
+ *           type: string
+ *           format: password
+ *           example: "novaSenha123"
+ *     UsuarioUpdateSaldo:
+ *       type: object
+ *       required:
+ *         - saldo
+ *       properties:
+ *         saldo:
+ *           type: number
+ *           format: decimal
+ *           example: 2500.50
  */
 
 /**
@@ -45,17 +131,7 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               nome:
- *                 type: string
- *                 example: "Fulano Silva"
- *               email:
- *                 type: string
- *                 example: "fulanosilva@email.com"
- *               senha:
- *                 type: string
- *                 example: "123456"
+ *             $ref: '#/components/schemas/UsuarioCreate'
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
@@ -65,6 +141,14 @@ const router = Router();
  *               $ref: '#/components/schemas/Usuario'
  *       400:
  *         description: Erro ao criar usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email já cadastrado"
  */
 router.post("/", UsuarioController.criar);
 
@@ -85,6 +169,14 @@ router.post("/", UsuarioController.criar);
  *                 $ref: '#/components/schemas/Usuario'
  *       400:
  *         description: Erro ao listar usuários
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erro ao buscar usuários"
  */
 router.get("/", UsuarioController.listar);
 
@@ -98,9 +190,10 @@ router.get("/", UsuarioController.listar);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do usuário
+ *         description: ID do usuário (UUID)
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Usuário encontrado
@@ -110,8 +203,24 @@ router.get("/", UsuarioController.listar);
  *               $ref: '#/components/schemas/Usuario'
  *       404:
  *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuário não encontrado"
  *       400:
  *         description: Erro na requisição
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID inválido"
  */
 router.get("/:id", UsuarioController.buscarPorId);
 
@@ -125,19 +234,16 @@ router.get("/:id", UsuarioController.buscarPorId);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do usuário
+ *         description: ID do usuário (UUID)
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               senha:
- *                 type: string
- *                 example: "novaSenha123"
+ *             $ref: '#/components/schemas/UsuarioUpdateSenha'
  *     responses:
  *       200:
  *         description: Senha atualizada com sucesso
@@ -147,6 +253,24 @@ router.get("/:id", UsuarioController.buscarPorId);
  *               $ref: '#/components/schemas/Usuario'
  *       400:
  *         description: Erro ao atualizar senha
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Senha não fornecida"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuário não encontrado"
  */
 router.put("/:id/senha", UsuarioController.atualizarSenha);
 
@@ -160,19 +284,16 @@ router.put("/:id/senha", UsuarioController.atualizarSenha);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do usuário
+ *         description: ID do usuário (UUID)
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               saldo:
- *                 type: number
- *                 example: 2500.50
+ *             $ref: '#/components/schemas/UsuarioUpdateSaldo'
  *     responses:
  *       200:
  *         description: Saldo atualizado com sucesso
@@ -182,6 +303,24 @@ router.put("/:id/senha", UsuarioController.atualizarSenha);
  *               $ref: '#/components/schemas/Usuario'
  *       400:
  *         description: Erro ao atualizar saldo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Saldo inválido"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuário não encontrado"
  */
 router.put("/:id/saldo", UsuarioController.atualizarSaldo);
 
@@ -195,14 +334,41 @@ router.put("/:id/saldo", UsuarioController.atualizarSaldo);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID do usuário
+ *         description: ID do usuário (UUID)
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Usuário excluído com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuário excluído"
  *       400:
  *         description: Erro ao excluir usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erro ao excluir usuário"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuário não encontrado"
  */
 router.delete("/:id", UsuarioController.deletar);
 
