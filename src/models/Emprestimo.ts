@@ -25,11 +25,11 @@ export class Emprestimo {
   id!: string;
 
   @OneToOne(() => Usuario, { eager: true, nullable: false })
-  @JoinColumn({ name: "tomadorId" }) // Coluna no banco será "tomadorId"
+  @JoinColumn({ name: "tomadorId" })
   tomador!: Usuario;
 
   @OneToMany(() => Pagamento, (pagamento) => pagamento.emprestimo, {
-    cascade: true, // opcional: salva pagamentos junto
+    cascade: true,
   })
   pagamentos!: Pagamento[];
 
@@ -55,9 +55,15 @@ export class Emprestimo {
   @CreateDateColumn()
   dataInicio!: Date;
 
-  @Column({ type: "timestamp" })
+  @Column({ type: "timestamp", nullable: true })
   dataFim!: Date;
 
-  @Column({ type: "int" })
-  codigoTransacao!:number
+  @Column({ type: "int", nullable: true })
+  codigoTransacao!: number;
+
+  
+  @BeforeInsert()
+  initSaldoDevedor() {
+    this.saldoDevedor = Number(this.montante);
+  }
 }
