@@ -21,11 +21,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/usuarios", usuarioRoutes);
 app.use("/investimentos", investimentoRoutes);
-app.use("/aplicações", aplicacaoRoutes);
+app.use("/aplicacoes", aplicacaoRoutes);
 app.use("/emprestimos", emprestimoRoutes);
 app.use("/pagamentos", pagamentoRoutes);
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT;
 
 AppDataSource.initialize()
   .then(() => {
