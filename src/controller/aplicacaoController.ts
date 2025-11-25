@@ -5,8 +5,8 @@ const service = new AplicacaoService();
 
 export const aplicarEmInvestimento = async (req: Request, res: Response) => {
   try {
-    const { usuarioId, valor } = req.body;
     const { investimentoId } = req.params;
+    const { usuarioId, valor } = req.body;
 
     if (!usuarioId || !valor) {
       return res.status(400).json({

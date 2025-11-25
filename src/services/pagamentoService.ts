@@ -7,17 +7,14 @@ const emprestimoRepository = AppDataSource.getRepository(Emprestimo);
 
 export const PagamentoService = {
 
-  /**
-   * Gera uma lista de pagamentos baseada no prazo e no montante do empréstimo
-   */
   async gerarPagamentosParaEmprestimo(emprestimo: Emprestimo): Promise<Pagamento[]> {
     const pagamentosGerados: Pagamento[] = [];
 
-    const prazo = Number(emprestimo.prazo); // em meses ou dias
+    const prazo = Number(emprestimo.prazo);
     const montante = Number(emprestimo.montante);
     const juros = Number(emprestimo.juros) / 100;
 
-    // === TABELA PRICE ===
+    
     const i = juros;
     const n = prazo;
 
@@ -26,7 +23,7 @@ export const PagamentoService = {
         ? montante * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
         : montante / n;
 
-    // Gerar datas de vencimento
+    
     const hoje = new Date();
 
     for (let k = 1; k <= n; k++) {
@@ -47,10 +44,7 @@ export const PagamentoService = {
 
     return await pagamentoRepository.save(pagamentosGerados);
   },
-
-  /**
-   * Criar pagamento individual (caso necessário)
-   */
+ 
   async criarPagamento(dados: Partial<Pagamento>): Promise<Pagamento> {
     if (!dados.emprestimo || !dados.emprestimo.id) {
       throw new Error("É necessário informar o ID do empréstimo.");
@@ -66,8 +60,7 @@ export const PagamentoService = {
 
     const pagamento = pagamentoRepository.create(dados);
     const saved = await pagamentoRepository.save(pagamento);
-
-    // Só desconta saldo se pago
+    
     if (saved.status !== "pago") return saved;
 
     let valorPagamento = Number(saved.valor);
@@ -87,6 +80,18 @@ export const PagamentoService = {
 
   async listarPagamentos(): Promise<Pagamento[]> {
     return await pagamentoRepository.find({ relations: ["emprestimo"] });
+  },
+
+   async listarPagamentosPorEmprestimo(
+    emprestimoId: string
+  ): Promise<Pagamento[]> {
+    const pagamentos = await pagamentoRepository.find({
+      where: { emprestimo: { id: emprestimoId } },
+      relations: ["emprestimo"],
+      order: { dataPagamento: "ASC" }, 
+    });
+
+    return pagamentos;
   },
 
   async buscarPorId(id: string): Promise<Pagamento | null> {

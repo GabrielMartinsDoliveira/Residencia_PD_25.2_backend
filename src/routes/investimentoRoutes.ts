@@ -6,7 +6,7 @@ import {
   updateStatusInvestimento,
   deleteInvestimentoById,
 } from "../controller/investimentoController.js";
-
+import { verifyToken } from "../middleware/verifyToken.js";
 const router = Router();
 
 /**
@@ -169,7 +169,7 @@ const router = Router();
  *                   type: string
  *                   example: "Apenas administradores podem criar investimentos"
  */
-router.post("/", createInvestimento);
+router.post("/", verifyToken, createInvestimento);
 
 /**
  * @swagger
@@ -197,7 +197,7 @@ router.post("/", createInvestimento);
  *                   type: string
  *                   example: "Erro ao buscar investimentos"
  */
-router.get("/", getInvestimentos);
+router.get("/", verifyToken, getInvestimentos);
 
 /**
  * @swagger
@@ -241,7 +241,7 @@ router.get("/", getInvestimentos);
  *                   type: string
  *                   example: "ID inválido"
  */
-router.get("/:id", getInvestimentoById);
+router.get("/:id", verifyToken, getInvestimentoById);
 
 /**
  * @swagger
@@ -293,7 +293,7 @@ router.get("/:id", getInvestimentoById);
  *                   type: string
  *                   example: "Investimento não encontrado"
  */
-router.put("/:id/status", updateStatusInvestimento);
+router.put("/:id/status", verifyToken, updateStatusInvestimento);
 
 /**
  * @swagger
@@ -341,6 +341,6 @@ router.put("/:id/status", updateStatusInvestimento);
  *                   type: string
  *                   example: "Investimento não encontrado"
  */
-router.delete("/:id", deleteInvestimentoById);
+router.delete("/:id", verifyToken, deleteInvestimentoById);
 
 export default router;

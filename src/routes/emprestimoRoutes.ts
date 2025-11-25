@@ -7,7 +7,7 @@ import {
   updateEmprestimo,
   deleteEmprestimo,
 } from "../controller/emprestimoController.js";
-
+import { verifyToken } from "../middleware/verifyToken.js";
 const router = Router();
 
 /**
@@ -180,7 +180,7 @@ const router = Router();
  *       500:
  *         description: Erro interno no servidor
  */
-router.post("/", createEmprestimo);
+router.post("/", verifyToken, createEmprestimo);
 
 /**
  * @swagger
@@ -200,7 +200,7 @@ router.post("/", createEmprestimo);
  *       500:
  *         description: Erro interno no servidor
  */
-router.get("/", getEmprestimos);
+router.get("/", verifyToken, getEmprestimos);
 
 /**
  * @swagger
@@ -230,7 +230,7 @@ router.get("/", getEmprestimos);
  *       500:
  *         description: Erro interno no servidor
  */
-router.get("/tomador/:tomadorId", getEmprestimosPorTomador);
+router.get("/tomador/:tomadorId", verifyToken, getEmprestimosPorTomador);
 
 /**
  * @swagger
@@ -258,7 +258,7 @@ router.get("/tomador/:tomadorId", getEmprestimosPorTomador);
  *       500:
  *         description: Erro interno no servidor
  */
-router.get("/:id", getEmprestimoById);
+router.get("/:id", verifyToken, getEmprestimoById);
 
 /**
  * @swagger
@@ -296,7 +296,7 @@ router.get("/:id", getEmprestimoById);
  *       500:
  *         description: Erro interno no servidor
  */
-router.put("/:id", updateEmprestimo);
+router.put("/:id", verifyToken, updateEmprestimo);
 
 /**
  * @swagger
@@ -330,6 +330,6 @@ router.put("/:id", updateEmprestimo);
  *       500:
  *         description: Erro interno no servidor
  */
-router.delete("/:id", deleteEmprestimo);
+router.delete("/:id", verifyToken, deleteEmprestimo);
 
 export default router;

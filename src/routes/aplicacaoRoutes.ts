@@ -6,6 +6,7 @@ import {
   getAplicacaoById,
   getAllAplicacoes,
 } from "../controller/aplicacaoController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = Router();
 
@@ -115,7 +116,7 @@ const router = Router();
  *               items:
  *                 $ref: '#/components/schemas/Aplicacao'
  */
-router.get("/", getAllAplicacoes);
+router.get("/", verifyToken, getAllAplicacoes);
 
 /**
  * @swagger
@@ -139,7 +140,7 @@ router.get("/", getAllAplicacoes);
  *       400:
  *         description: Erro na requisição
  */
-router.post("/", aplicarEmInvestimento);
+router.post("/:investimentoId", verifyToken, aplicarEmInvestimento);
 
 /**
  * @swagger
@@ -165,7 +166,7 @@ router.post("/", aplicarEmInvestimento);
  *       404:
  *         description: Aplicação não encontrada
  */
-router.get("/:id", getAplicacaoById);
+router.get("/:id", verifyToken, getAplicacaoById);
 
 /**
  * @swagger
@@ -193,7 +194,7 @@ router.get("/:id", getAplicacaoById);
  *       404:
  *         description: Investimento não encontrado
  */
-router.get("/:investimentoId", getAplicacoesPorInvestimento);
+router.get("/:investimentoId", verifyToken, getAplicacoesPorInvestimento);
 
 /**
  * @swagger
@@ -221,6 +222,6 @@ router.get("/:investimentoId", getAplicacoesPorInvestimento);
  *       404:
  *         description: Usuário não encontrado
  */
-router.get("/:usuarioId", getAplicacoesPorUsuario);
+router.get("/:usuarioId", verifyToken, getAplicacoesPorUsuario);
 
 export default router;

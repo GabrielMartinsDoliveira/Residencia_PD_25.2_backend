@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PagamentoController } from "../controller/pagamentoController.js";
-
+import { verifyToken } from "../middleware/verifyToken.js";
 const router = Router();
 
 /**
@@ -160,7 +160,7 @@ const router = Router();
  *                   type: string
  *                   example: "Já existe um pagamento em aberto para este empréstimo"
  */
-router.post("/", PagamentoController.criar);
+router.post("/", verifyToken, PagamentoController.criar);
 
 /**
  * @swagger
@@ -188,7 +188,46 @@ router.post("/", PagamentoController.criar);
  *                   type: string
  *                   example: "Erro ao buscar pagamentos"
  */
-router.get("/", PagamentoController.listar);
+router.get("/", verifyToken, PagamentoController.listar);
+
+/**
+ * @swagger
+ * /pagamentos/emprestimo/{emprestimoId}:
+ *   get:
+ *     summary: Lista todos os pagamentos relacionados a um empréstimo
+ *     tags: [Pagamentos]
+ *     parameters:
+ *       - in: path
+ *         name: emprestimoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do empréstimo
+ *     responses:
+ *       200:
+ *         description: Lista de pagamentos relacionados ao empréstimo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pagamento'
+ *       400:
+ *         description: Erro ao buscar pagamentos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
+
+router.get(
+  "/emprestimo/:emprestimoId",
+  verifyToken,
+  PagamentoController.listarPorEmprestimo
+);
 
 /**
  * @swagger
@@ -232,7 +271,7 @@ router.get("/", PagamentoController.listar);
  *                   type: string
  *                   example: "ID inválido"
  */
-router.get("/:id", PagamentoController.buscarPorId);
+router.get("/:id", verifyToken, PagamentoController.buscarPorId);
 
 /**
  * @swagger
@@ -292,7 +331,7 @@ router.get("/:id", PagamentoController.buscarPorId);
  *                   type: string
  *                   example: "Não é possível alterar status de pagamento já quitado"
  */
-router.put("/:id/status", PagamentoController.atualizarStatus);
+router.put("/:id/status", verifyToken, PagamentoController.atualizarStatus);
 
 /**
  * @swagger
@@ -340,6 +379,6 @@ router.put("/:id/status", PagamentoController.atualizarStatus);
  *                   type: string
  *                   example: "Pagamento não encontrado"
  */
-router.delete("/:id", PagamentoController.deletar);
+router.delete("/:id", verifyToken, PagamentoController.deletar);
 
 export default router;

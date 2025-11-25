@@ -20,6 +20,20 @@ export const PagamentoController = {
     }
   },
 
+  async listarPorEmprestimo(req: Request, res: Response) {
+    try {
+      const { emprestimoId } = req.params;
+
+      const pagamentos = await PagamentoService.listarPagamentosPorEmprestimo(
+        emprestimoId
+      );
+
+      res.status(200).json(pagamentos);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async buscarPorId(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -39,7 +53,10 @@ export const PagamentoController = {
     try {
       const { id } = req.params;
       const { status } = req.body;
-      const pagamentoAtualizado = await PagamentoService.atualizarStatus(id, status);
+      const pagamentoAtualizado = await PagamentoService.atualizarStatus(
+        id,
+        status
+      );
       res.status(200).json(pagamentoAtualizado);
     } catch (error: any) {
       res.status(400).json({ message: error.message });

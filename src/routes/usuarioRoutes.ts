@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { UsuarioController } from "../controller/usuarioController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = Router();
 
@@ -178,7 +179,7 @@ router.post("/", UsuarioController.criar);
  *                   type: string
  *                   example: "Erro ao buscar usuários"
  */
-router.get("/", UsuarioController.listar);
+router.get("/", verifyToken, UsuarioController.listar);
 
 /**
  * @swagger
@@ -222,7 +223,7 @@ router.get("/", UsuarioController.listar);
  *                   type: string
  *                   example: "ID inválido"
  */
-router.get("/:id", UsuarioController.buscarPorId);
+router.get("/:id", verifyToken, UsuarioController.buscarPorId);
 
 /**
  * @swagger
@@ -272,7 +273,7 @@ router.get("/:id", UsuarioController.buscarPorId);
  *                   type: string
  *                   example: "Usuário não encontrado"
  */
-router.put("/:id/senha", UsuarioController.atualizarSenha);
+router.put("/:id/senha", verifyToken, UsuarioController.atualizarSenha);
 
 /**
  * @swagger
@@ -322,7 +323,7 @@ router.put("/:id/senha", UsuarioController.atualizarSenha);
  *                   type: string
  *                   example: "Usuário não encontrado"
  */
-router.put("/:id/saldo", UsuarioController.atualizarSaldo);
+router.put("/:id/saldo", verifyToken, UsuarioController.atualizarSaldo);
 
 /**
  * @swagger
@@ -370,6 +371,6 @@ router.put("/:id/saldo", UsuarioController.atualizarSaldo);
  *                   type: string
  *                   example: "Usuário não encontrado"
  */
-router.delete("/:id", UsuarioController.deletar);
+router.delete("/:id", verifyToken, UsuarioController.deletar);
 
 export default router;
