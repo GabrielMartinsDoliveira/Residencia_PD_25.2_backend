@@ -159,6 +159,8 @@ router.post("/", UsuarioController.criar);
  *   get:
  *     summary: Lista todos os usuários
  *     tags: [Usuários]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de usuários
@@ -187,6 +189,8 @@ router.get("/", verifyToken, UsuarioController.listar);
  *   get:
  *     summary: Busca um usuário pelo ID
  *     tags: [Usuários]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -231,6 +235,8 @@ router.get("/:id", verifyToken, UsuarioController.buscarPorId);
  *   put:
  *     summary: Atualiza a senha de um usuário
  *     tags: [Usuários]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -281,6 +287,8 @@ router.put("/:id/senha", verifyToken, UsuarioController.atualizarSenha);
  *   put:
  *     summary: Atualiza o saldo de um usuário
  *     tags: [Usuários]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -331,6 +339,8 @@ router.put("/:id/saldo", verifyToken, UsuarioController.atualizarSaldo);
  *   delete:
  *     summary: Exclui um usuário pelo ID
  *     tags: [Usuários]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

@@ -106,6 +106,8 @@ const router = Router();
  *   get:
  *     summary: Listar todas as aplicações
  *     tags: [Aplicações]
+ *     security:
+ *       - bearerAuth: [] 
  *     responses:
  *       200:
  *         description: Lista de aplicações retornada com sucesso
@@ -124,6 +126,8 @@ router.get("/", verifyToken, getAllAplicacoes);
  *   post:
  *     summary: Criar uma nova aplicação
  *     tags: [Aplicações]
+ *     security:
+ *       - bearerAuth: [] 
  *     requestBody:
  *       required: true
  *       content:
@@ -148,6 +152,8 @@ router.post("/:investimentoId", verifyToken, aplicarEmInvestimento);
  *   get:
  *     summary: Buscar aplicação pelo ID
  *     tags: [Aplicações]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - in: path
  *         name: id
@@ -174,6 +180,8 @@ router.get("/:id", verifyToken, getAplicacaoById);
  *   get:
  *     summary: Listar aplicações de um investimento
  *     tags: [Aplicações]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - in: path
  *         name: investimentoId
@@ -202,6 +210,8 @@ router.get("/:investimentoId", verifyToken, getAplicacoesPorInvestimento);
  *   get:
  *     summary: Listar aplicações feitas por um usuário
  *     tags: [Aplicações]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - in: path
  *         name: usuarioId

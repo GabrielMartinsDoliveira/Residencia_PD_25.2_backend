@@ -12,6 +12,7 @@ import investimentoRoutes from "./routes/investimentoRoutes.js";
 import aplicacaoRoutes from "./routes/aplicacaoRoutes.js";
 import emprestimoRoutes from "./routes/emprestimoRoutes.js";
 import pagamentoRoutes from "./routes/pagamentoRoutes.js";
+import authRoutes from "./routes/authRoutes.js"
 
 const app = express();
 app.use(cors());
@@ -19,6 +20,7 @@ app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+app.use("/login", authRoutes)
 app.use("/usuarios", usuarioRoutes);
 app.use("/investimentos", investimentoRoutes);
 app.use("/aplicacoes", aplicacaoRoutes);

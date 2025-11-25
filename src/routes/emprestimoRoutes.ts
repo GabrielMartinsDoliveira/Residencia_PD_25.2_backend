@@ -158,6 +158,8 @@ const router = Router();
  *   post:
  *     summary: Cria um novo empréstimo (apenas tomadores)
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     requestBody:
  *       required: true
  *       content:
@@ -188,6 +190,8 @@ router.post("/", verifyToken, createEmprestimo);
  *   get:
  *     summary: Lista todos os empréstimos
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     responses:
  *       200:
  *         description: Lista de empréstimos cadastrados
@@ -208,6 +212,8 @@ router.get("/", verifyToken, getEmprestimos);
  *   get:
  *     summary: Busca empréstimos por tomador
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: tomadorId
  *         in: path
@@ -238,6 +244,8 @@ router.get("/tomador/:tomadorId", verifyToken, getEmprestimosPorTomador);
  *   get:
  *     summary: Busca um empréstimo pelo ID
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path
@@ -266,6 +274,8 @@ router.get("/:id", verifyToken, getEmprestimoById);
  *   put:
  *     summary: Atualiza um empréstimo
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path
@@ -304,6 +314,8 @@ router.put("/:id", verifyToken, updateEmprestimo);
  *   delete:
  *     summary: Exclui um empréstimo pelo ID
  *     tags: [Empréstimos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path

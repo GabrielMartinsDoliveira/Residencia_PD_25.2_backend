@@ -135,6 +135,8 @@ const router = Router();
  *   post:
  *     summary: Cria um novo investimento (apenas administradores)
  *     tags: [Investimentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     requestBody:
  *       required: true
  *       content:
@@ -177,6 +179,8 @@ router.post("/", verifyToken, createInvestimento);
  *   get:
  *     summary: Lista todos os investimentos
  *     tags: [Investimentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     responses:
  *       200:
  *         description: Lista de investimentos cadastrados
@@ -205,6 +209,8 @@ router.get("/", verifyToken, getInvestimentos);
  *   get:
  *     summary: Busca um investimento pelo ID
  *     tags: [Investimentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path
@@ -249,6 +255,8 @@ router.get("/:id", verifyToken, getInvestimentoById);
  *   put:
  *     summary: Atualiza o status de um investimento
  *     tags: [Investimentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path
@@ -301,6 +309,8 @@ router.put("/:id/status", verifyToken, updateStatusInvestimento);
  *   delete:
  *     summary: Exclui um investimento pelo ID
  *     tags: [Investimentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path

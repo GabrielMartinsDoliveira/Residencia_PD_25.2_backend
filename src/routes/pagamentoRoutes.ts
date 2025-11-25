@@ -126,6 +126,8 @@ const router = Router();
  *   post:
  *     summary: Cria um novo pagamento vinculado a um empréstimo
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
@@ -168,6 +170,8 @@ router.post("/", verifyToken, PagamentoController.criar);
  *   get:
  *     summary: Lista todos os pagamentos cadastrados
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: []  
  *     responses:
  *       200:
  *         description: Lista de pagamentos
@@ -196,6 +200,8 @@ router.get("/", verifyToken, PagamentoController.listar);
  *   get:
  *     summary: Lista todos os pagamentos relacionados a um empréstimo
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: []  
  *     parameters:
  *       - in: path
  *         name: emprestimoId
@@ -235,6 +241,8 @@ router.get(
  *   get:
  *     summary: Busca um pagamento pelo ID
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -279,6 +287,8 @@ router.get("/:id", verifyToken, PagamentoController.buscarPorId);
  *   put:
  *     summary: Atualiza o status de um pagamento
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -339,6 +349,8 @@ router.put("/:id/status", verifyToken, PagamentoController.atualizarStatus);
  *   delete:
  *     summary: Exclui um pagamento pelo ID
  *     tags: [Pagamentos]
+ *     security:
+ *       - bearerAuth: [] 
  *     parameters:
  *       - name: id
  *         in: path

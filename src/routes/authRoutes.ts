@@ -86,6 +86,6 @@ const router = Router();
  *       500:
  *         description: Erro interno do servidor
  */
-router.post("/login", login);
+router.post("/", login);
 
 export default router;
