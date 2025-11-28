@@ -28,7 +28,7 @@ export const PagamentoService = {
 
     for (let k = 1; k <= n; k++) {
       const venc = new Date(hoje);
-      venc.setMonth(venc.getMonth() + k); // parcela mensal
+      venc.setMonth(venc.getMonth() + k); 
 
       const pagamento = pagamentoRepository.create({
         emprestimo,

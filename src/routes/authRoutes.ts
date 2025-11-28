@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login } from "../controller/authController.js";
+import { login, logout } from "../controller/authController.js";
 
 const router = Router();
 
@@ -50,12 +50,23 @@ const router = Router();
  *             role:
  *               type: string
  *               enum: [admin, tomador, investidor]
+ *     LogoutResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: "Logout realizado com sucesso."
  *     ErrorResponse:
  *       type: object
  *       properties:
  *         error:
  *           type: string
  *           example: "Credenciais inválidas"
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  */
 
 /**
@@ -77,6 +88,12 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Credenciais inválidas
  *         content:
@@ -86,6 +103,32 @@ const router = Router();
  *       500:
  *         description: Erro interno do servidor
  */
-router.post("/", login);
+router.post("/login", login);
+
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     summary: Realiza logout do usuário
+ *     tags: [Autenticação]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LogoutResponse'
+ *       400:
+ *         description: Token não fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.post("/logout", logout);
 
 export default router;
