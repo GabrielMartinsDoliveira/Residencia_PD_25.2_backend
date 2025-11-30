@@ -17,11 +17,11 @@ export class Investimento {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => Usuario, { eager: true })
+  @ManyToOne(() => Usuario)
   @JoinColumn({ name: "administradorId" })
   administrador!: Usuario;
 
-  @ManyToMany(() => Usuario, { eager: true })
+  @ManyToMany(() => Usuario)
   @JoinTable({
     name: "investimento_investidores",
     joinColumn: { name: "investimentoId" },
