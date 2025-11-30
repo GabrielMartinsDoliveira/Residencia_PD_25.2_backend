@@ -13,41 +13,57 @@ export class AplicacaoService {
     await queryRunner.startTransaction();
 
     try {
+      /**
+       * 1 — Buscar o investimento COM LOCK, sem relations (evita LEFT JOIN)
+       */
       const investimento = await queryRunner.manager.findOne(Investimento, {
         where: { id: investimentoId },
         lock: { mode: "pessimistic_write" },
-        relations: ["investidores"],
       });
 
       if (!investimento) throw new Error("Investimento não encontrado");
       if (investimento.status !== "em andamento")
         throw new Error("Investimento não está disponível");
 
+      /**
+       * 2 — Buscar soma das aplicações existentes
+       */
       const { total } = await queryRunner.manager
         .createQueryBuilder(Aplicacao, "a")
         .select("COALESCE(SUM(a.valor), 0)", "total")
         .where("a.investimentoId = :invId", { invId: investimentoId })
+        .setLock("pessimistic_read")
         .getRawOne();
 
       const somaAtual = parseFloat(total || "0");
-
       const limite = parseFloat(String(investimento.valor));
+
       if (somaAtual + valor > limite) {
         throw new Error("Valor excede o limite disponível do investimento");
       }
 
+      /**
+       * 3 — Buscar usuário com LOCK
+       */
       const usuario = await queryRunner.manager.findOne(Usuario, {
         where: { id: usuarioId },
         lock: { mode: "pessimistic_write" },
       });
+
       if (!usuario) throw new Error("Usuário não encontrado");
 
       const saldo = parseFloat(String(usuario.saldo || 0));
       if (saldo < valor) throw new Error("Saldo insuficiente");
 
+      /**
+       * 4 — Debitar saldo do usuário
+       */
       usuario.saldo = saldo - valor;
       await queryRunner.manager.save(usuario);
 
+      /**
+       * 5 — Criar aplicação
+       */
       const aplicacao = queryRunner.manager.create(Aplicacao, {
         usuario,
         investimento,
@@ -55,16 +71,24 @@ export class AplicacaoService {
       });
       await queryRunner.manager.save(aplicacao);
 
-      if (investimento.totalInvestido !== undefined) {
-        investimento.totalInvestido = somaAtual + valor;
-        await queryRunner.manager.save(investimento);
-      }
+      /**
+       * 6 — Atualizar total investido
+       */
+      investimento.totalInvestido = somaAtual + valor;
+      await queryRunner.manager.save(investimento);
 
-      if (!investimento.investidores?.find((inv) => inv.id === usuario.id)) {
-        investimento.investidores.push(usuario);
-        await queryRunner.manager.save(investimento);
-      }
+      /**
+       * 7 — Adicionar investidor à relação sem carregar relations
+       */
+      await queryRunner.manager
+        .createQueryBuilder()
+        .relation(Investimento, "investidores")
+        .of(investimento)            // investimentoId
+        .add(usuario.id);            // usuarioId
 
+      /**
+       * 8 — Commit final
+       */
       await queryRunner.commitTransaction();
       return aplicacao;
     } catch (err) {
@@ -75,10 +99,12 @@ export class AplicacaoService {
     }
   }
 
-  async getAplicacoesPorInvestimento(investimentoId: string) {
-    const repo = AppDataSource.getRepository(Aplicacao);
+  /**
+   * LISTAGENS (não usam lock, não há problema)
+   */
 
-    return await repo.find({
+  async getAplicacoesPorInvestimento(investimentoId: string) {
+    return await AppDataSource.getRepository(Aplicacao).find({
       where: { investimento: { id: investimentoId } },
       relations: ["usuario", "investimento"],
       order: { dataCriacao: "DESC" },
@@ -86,9 +112,7 @@ export class AplicacaoService {
   }
 
   async getAplicacoesPorUsuario(usuarioId: string) {
-    const repo = AppDataSource.getRepository(Aplicacao);
-
-    return await repo.find({
+    return await AppDataSource.getRepository(Aplicacao).find({
       where: { usuario: { id: usuarioId } },
       relations: ["usuario", "investimento"],
       order: { dataCriacao: "DESC" },
@@ -96,18 +120,14 @@ export class AplicacaoService {
   }
 
   async getAplicacaoById(id: string) {
-    const repo = AppDataSource.getRepository(Aplicacao);
-
-    return await repo.findOne({
+    return await AppDataSource.getRepository(Aplicacao).findOne({
       where: { id },
       relations: ["usuario", "investimento"],
     });
   }
 
   async getAllAplicacoes(): Promise<Aplicacao[]> {
-    const repo = AppDataSource.getRepository(Aplicacao);
-
-    return await repo.find({
+    return await AppDataSource.getRepository(Aplicacao).find({
       relations: ["usuario", "investimento"],
       order: { dataCriacao: "DESC" },
     });
