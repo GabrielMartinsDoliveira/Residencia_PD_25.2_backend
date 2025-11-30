@@ -22,8 +22,8 @@ const router = Router();
  *       properties:
  *         matricula:
  *           type: string
- *           description: Matrícula do usuário
- *           example: "2024001"
+ *           description: Email
+ *           example: "fulano@email.com"
  *         senha:
  *           type: string
  *           description: Senha do usuário
