@@ -124,7 +124,7 @@ router.get("/", verifyToken, getAllAplicacoes);
  * @swagger
  * /aplicacoes:
  *   post:
- *     summary: Criar uma nova aplicação
+ *     summary: Aplicar em um investimento
  *     tags: [Aplicações]
  *     security:
  *       - bearerAuth: [] 

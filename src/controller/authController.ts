@@ -8,7 +8,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, senha } = req.body;
 
     if (!email || !senha) {
-      return res.status(400).json({ error: "Matrícula e senha são obrigatórias." });
+      return res.status(400).json({ error: "Email e senha são obrigatórias." });
     }
 
     const resultado = await authService.login(email, senha);

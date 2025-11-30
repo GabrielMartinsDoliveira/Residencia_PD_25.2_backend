@@ -13,7 +13,7 @@ export class AuthService {
     const user = await this.userRepo.findOne({ where: { email } });
 
     if (!user) {
-      throw new Error("Usuário com essa matrícula não foi encontrado.");
+      throw new Error("Usuário não foi encontrado.");
     }
 
     const senhaCorreta = await user.compararSenha(senha);
