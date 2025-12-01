@@ -4,8 +4,8 @@ import { Usuario } from "../models/Usuario.js";
 import { Aplicacao } from "../models/Aplicacao.js";
 
 export class AplicacaoService {
-  async aplicar(usuarioId: string, investimentoId: string, valorStr: string) {
-    const valor = parseFloat(valorStr);
+  async aplicar(usuarioId: string, investimentoId: string, valor: number) {
+    // Mudar para receber number diretamente
     if (valor <= 0) throw new Error("Valor inválido");
 
     const queryRunner = AppDataSource.createQueryRunner();
@@ -13,9 +13,7 @@ export class AplicacaoService {
     await queryRunner.startTransaction();
 
     try {
-      /**
-       * 1 — Buscar o investimento COM LOCK, sem relations (evita LEFT JOIN)
-       */
+      // 1 — Buscar investimento com lock
       const investimento = await queryRunner.manager.findOne(Investimento, {
         where: { id: investimentoId },
         lock: { mode: "pessimistic_write" },
@@ -25,15 +23,12 @@ export class AplicacaoService {
       if (investimento.status !== "em andamento")
         throw new Error("Investimento não está disponível");
 
-      /**
-       * 2 — Buscar soma das aplicações existentes
-       */
+      // 2 — Buscar soma SEM LOCK (correção principal)
       const { total } = await queryRunner.manager
         .createQueryBuilder(Aplicacao, "a")
         .select("COALESCE(SUM(a.valor), 0)", "total")
         .where("a.investimentoId = :invId", { invId: investimentoId })
-        .setLock("pessimistic_read")
-        .getRawOne();
+        .getRawOne(); // ← REMOVER setLock
 
       const somaAtual = parseFloat(total || "0");
       const limite = parseFloat(String(investimento.valor));
@@ -42,9 +37,7 @@ export class AplicacaoService {
         throw new Error("Valor excede o limite disponível do investimento");
       }
 
-      /**
-       * 3 — Buscar usuário com LOCK
-       */
+      // 3 — Buscar usuário com lock
       const usuario = await queryRunner.manager.findOne(Usuario, {
         where: { id: usuarioId },
         lock: { mode: "pessimistic_write" },
@@ -55,15 +48,11 @@ export class AplicacaoService {
       const saldo = parseFloat(String(usuario.saldo || 0));
       if (saldo < valor) throw new Error("Saldo insuficiente");
 
-      /**
-       * 4 — Debitar saldo do usuário
-       */
+      // 4 — Debitar saldo
       usuario.saldo = saldo - valor;
       await queryRunner.manager.save(usuario);
 
-      /**
-       * 5 — Criar aplicação
-       */
+      // 5 — Criar aplicação
       const aplicacao = queryRunner.manager.create(Aplicacao, {
         usuario,
         investimento,
@@ -71,24 +60,17 @@ export class AplicacaoService {
       });
       await queryRunner.manager.save(aplicacao);
 
-      /**
-       * 6 — Atualizar total investido
-       */
+      // 6 — Atualizar total investido
       investimento.totalInvestido = somaAtual + valor;
       await queryRunner.manager.save(investimento);
 
-      /**
-       * 7 — Adicionar investidor à relação sem carregar relations
-       */
+      // 7 — Adicionar investidor
       await queryRunner.manager
         .createQueryBuilder()
         .relation(Investimento, "investidores")
-        .of(investimento)            // investimentoId
-        .add(usuario.id);            // usuarioId
+        .of(investimento)
+        .add(usuario.id);
 
-      /**
-       * 8 — Commit final
-       */
       await queryRunner.commitTransaction();
       return aplicacao;
     } catch (err) {
