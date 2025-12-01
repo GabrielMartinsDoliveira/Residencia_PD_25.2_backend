@@ -35,11 +35,11 @@ export class InvestimentoService {
   }
 
   async createInvestimento(data: Partial<Investimento>) {
-    const { administrador } = data;
+    const adminId = (data as any).administradorId ?? data.administrador?.id;
 
-    const admin = await this.usuarioRepo.findOne({
-      where: { id: administrador?.id },
-    });
+    if (!adminId) throw new Error("AdministradorId é obrigatório");
+
+    const admin = await this.usuarioRepo.findOne({ where: { id: adminId } });
 
     if (!admin) {
       throw new Error("Administrador não encontrado");
@@ -62,17 +62,19 @@ export class InvestimentoService {
   }
 
   async getInvestimentos() {
-    const items = await this.investimentoRepo.find();
-    return items.map(this.mapInvestimento);
+    const items = await this.investimentoRepo.find({
+  relations: ["investidores"]
+});
+    return items.map(i => this.mapInvestimento(i));
   }
 
   async getInvestimentoById(id: string) {
-    const item = await this.investimentoRepo.findOne({ where: { id } });
+    const item = await this.investimentoRepo.findOne({ where: { id }, relations:["investidores"] });
     return item ? this.mapInvestimento(item) : null;
   }
 
   async updateStatusInvestimento(id: string, status: string) {
-    const investimento = await this.investimentoRepo.findOne({ where: { id } });
+    const investimento = await this.investimentoRepo.findOne({ where: { id }, relations:["investidores"] });
 
     if (!investimento) {
       throw new Error("Investimento não encontrado");
