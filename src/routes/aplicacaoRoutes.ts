@@ -202,7 +202,7 @@ router.get("/:id", verifyToken, getAplicacaoById);
  *       404:
  *         description: Investimento não encontrado
  */
-router.get("/:investimentoId", verifyToken, getAplicacoesPorInvestimento);
+router.get("/investimento/:investimentoId", verifyToken, getAplicacoesPorInvestimento);
 
 /**
  * @swagger
@@ -232,6 +232,6 @@ router.get("/:investimentoId", verifyToken, getAplicacoesPorInvestimento);
  *       404:
  *         description: Usuário não encontrado
  */
-router.get("/:usuarioId", verifyToken, getAplicacoesPorUsuario);
+router.get("/usuario/:usuarioId", verifyToken, getAplicacoesPorUsuario);
 
 export default router;

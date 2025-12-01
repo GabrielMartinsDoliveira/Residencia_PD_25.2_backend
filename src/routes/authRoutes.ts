@@ -17,10 +17,10 @@ const router = Router();
  *     LoginRequest:
  *       type: object
  *       required:
- *         - matricula
+ *         - email
  *         - senha
  *       properties:
- *         matricula:
+ *         email:
  *           type: string
  *           description: Email
  *           example: "fulano@email.com"
