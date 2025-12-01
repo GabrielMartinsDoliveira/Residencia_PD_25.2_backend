@@ -63,18 +63,18 @@ export class InvestimentoService {
 
   async getInvestimentos() {
     const items = await this.investimentoRepo.find({
-  relations: ["investidores"]
+  relations: ["administrador", "investidores"]
 });
     return items.map(i => this.mapInvestimento(i));
   }
 
   async getInvestimentoById(id: string) {
-    const item = await this.investimentoRepo.findOne({ where: { id }, relations:["investidores"] });
+    const item = await this.investimentoRepo.findOne({ where: { id }, relations: ["administrador", "investidores"] });
     return item ? this.mapInvestimento(item) : null;
   }
 
   async updateStatusInvestimento(id: string, status: string) {
-    const investimento = await this.investimentoRepo.findOne({ where: { id }, relations:["investidores"] });
+    const investimento = await this.investimentoRepo.findOne({ where: { id }, relations: ["administrador", "investidores"] });
 
     if (!investimento) {
       throw new Error("Investimento não encontrado");

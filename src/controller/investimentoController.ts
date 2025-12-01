@@ -12,7 +12,7 @@ export const createInvestimento = async (req: Request, res: Response) => {
   }
 };
 
-export const getInvestimentos = async (_req: Request, res: Response) => {
+export const getInvestimentos = async (req: Request, res: Response) => {
   try {
     const investimentos = await service.getInvestimentos();
     res.status(200).json(investimentos);
